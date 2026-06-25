@@ -16,7 +16,7 @@ export const siteConfig = {
   bilibiliSpace: 'https://space.bilibili.com/18731657',
   youtube: 'https://www.youtube.com/@nextdoordatarecoveryshop',
   xiaohongshu: 'https://www.xiaohongshu.com/user/profile/614d7680000000000201e5db',
-  douyin: '',
+  douyin: 'https://www.douyin.com/user/MS4wLjABAAAAOLUtSGvFWPu9ctFJysB7RSJfQxJQH2Vpg6FYthtX4F4W9dZGsYtF93ypvk7_F0vJ?from_tab_name=main',
 
   // Quark root — filled in Phase 2 when free/paid model is decided
   quarkRoot: '',
