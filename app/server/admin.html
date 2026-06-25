@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BinaryDoc 后台</title>
+<style>
+  :root { --b: #0a0a0a; --bg: #f6f7f9; --line: #e3e6ea; --accent: #22d3ee; --txt: #1a1a1a; --mut: #6b7280; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--txt); }
+  header { background: var(--b); color: #fff; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 16px; margin: 0; font-weight: 700; }
+  header .btn-out { background: none; color: #fff8; border: 1px solid #fff3; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+  .panel { background: #fff; border: 1px solid var(--line); padding: 16px; }
+  .list { list-style: none; padding: 0; margin: 0; }
+  .list li { padding: 10px 8px; border-bottom: 1px solid var(--line); cursor: pointer; font-size: 14px; }
+  .list li:hover { background: var(--bg); }
+  .list li.active { background: #e7fbff; border-left: 3px solid var(--accent); padding-left: 5px; }
+  .list li .t { font-weight: 600; display: block; }
+  .list li .m { font-size: 11px; color: var(--mut); }
+  .new-btn { display: block; width: 100%; padding: 10px; background: var(--accent); color: #000; border: none; font-weight: 700; cursor: pointer; margin-bottom: 12px; }
+  label { display: block; font-size: 12px; color: var(--mut); margin: 10px 0 4px; }
+  input, select, textarea { width: 100%; padding: 8px; border: 1px solid var(--line); font-family: inherit; font-size: 14px; }
+  textarea { font-family: 'Consolas', monospace; }
+  .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .body-area { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .body-area textarea { min-height: 360px; }
+  .preview { border: 1px solid var(--line); padding: 12px; overflow: auto; max-height: 420px; }
+  .preview h2 { font-size: 18px; margin: 14px 0 6px; }
+  .preview h3 { font-size: 15px; margin: 12px 0 4px; }
+  .preview p { margin: 8px 0; line-height: 1.7; font-size: 14px; }
+  .preview ul, .preview ol { padding-left: 20px; margin: 8px 0; }
+  .preview blockquote { border-left: 3px solid var(--accent); padding-left: 10px; color: var(--mut); margin: 10px 0; }
+  .actions { margin-top: 16px; display: flex; gap: 10px; }
+  .actions button { padding: 9px 18px; border: none; cursor: pointer; font-weight: 600; font-size: 14px; }
+  .save { background: var(--accent); color: #000; }
+  .del { background: #fee; color: #c00; }
+  #login { max-width: 320px; margin: 80px auto; padding: 24px; background: #fff; border: 1px solid var(--line); }
+  #login h2 { margin: 0 0 16px; font-size: 18px; }
+  #login button { width: 100%; padding: 10px; background: var(--b); color: #fff; border: none; cursor: pointer; font-weight: 700; margin-top: 12px; }
+  .err { color: #c00; font-size: 13px; margin-top: 8px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div id="login">
+  <h2>BinaryDoc 后台</h2>
+  <input type="password" id="pw" placeholder="密码" autofocus />
+  <button onclick="doLogin()">登录</button>
+  <div class="err hidden" id="loginErr">密码错误</div>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <h1>BinaryDoc 文章后台</h1>
+    <button class="btn-out" onclick="doLogout()">退出</button>
+  </header>
+  <div class="wrap">
+    <div class="panel">
+      <button class="new-btn" onclick="newArticle()">+ 新建文章</button>
+      <ul class="list" id="list"></ul>
+    </div>
+    <div class="panel">
+      <div id="empty">选择左侧文章编辑,或点「新建文章」。</div>
+      <div id="editor" class="hidden">
+        <div class="row">
+          <div><label>slug (URL)</label><input id="slug" placeholder="my-article" /></div>
+          <div><label>语言</label><select id="lang"><option value="zh">zh</option><option value="en">en</option></select></div>
+          <div><label>日期</label><input id="date" placeholder="2026-06-24" /></div>
+        </div>
+        <label>标题</label><input id="title" />
+        <div class="row">
+          <div><label>标签</label><input id="tag" placeholder="固件" /></div>
+          <div><label>摘要</label><input id="desc" placeholder="一句话简介" /></div>
+        </div>
+        <label>正文 (Markdown)</label>
+        <div class="body-area">
+          <textarea id="body" oninput="render()" placeholder="## 标题&#10;正文..."></textarea>
+          <div class="preview" id="preview"></div>
+        </div>
+        <div class="actions">
+          <button class="save" onclick="save()">保存</button>
+          <button class="del" onclick="del()">删除</button>
+        </div>
+        <div id="msg" style="color:#080;font-size:13px;margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const api = (p, opt) => fetch(p, { credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, ...opt }).then(r => r.ok ? r.json().catch(() => ({})) : Promise.reject(r));
+let current = null;
+
+async function boot() {
+  try { await api('/api/articles'); showApp(); loadList(); }
+  catch { document.getElementById('login').classList.remove('hidden'); }
+}
+async function doLogin() {
+  const pw = document.getElementById('pw').value;
+  try { await api('/api/login', { method: 'POST', body: JSON.stringify({ password: pw }) }); document.getElementById('login').classList.add('hidden'); document.getElementById('loginErr').classList.add('hidden'); showApp(); loadList(); }
+  catch { document.getElementById('loginErr').classList.remove('hidden'); }
+}
+async function doLogout() { await api('/api/logout', { method: 'POST' }); location.reload(); }
+function showApp() { document.getElementById('app').classList.remove('hidden'); }
+
+async function loadList() {
+  const { articles } = await (await fetch('/api/articles', { credentials: 'same-origin' })).json().then(r => r).catch(() => ({ articles: [] }));
+  const arr = Array.isArray(articles) ? articles : await fetch('/api/articles', { credentials: 'same-origin' }).then(r => r.json());
+  const ul = document.getElementById('list');
+  ul.innerHTML = '';
+  arr.forEach(a => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="t">${a.title}</span><span class="m">${a.date} · ${a.lang}</span>`;
+    li.onclick = () => openArticle(a.slug, a.lang, li);
+    ul.appendChild(li);
+  });
+}
+
+function fieldsToEmpty() {
+  document.getElementById('slug').value = '';
+  document.getElementById('slug').disabled = false;
+  document.getElementById('lang').value = 'zh';
+  document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('title').value = '';
+  document.getElementById('tag').value = '';
+  document.getElementById('desc').value = '';
+  document.getElementById('body').value = '';
+  render();
+}
+function newArticle() {
+  current = null;
+  document.getElementById('empty').classList.add('hidden');
+  document.getElementById('editor').classList.remove('hidden');
+  fieldsToEmpty();
+}
+
+async function openArticle(slug, lang, li) {
+  const { raw } = await api(`/api/article/${slug}/${lang}`);
+  current = { slug, lang };
+  document.getElementById('empty').classList.add('hidden');
+  document.getElementById('editor').classList.remove('hidden');
+  document.querySelectorAll('.list li').forEach(x => x.classList.remove('active'));
+  li && li.classList.add('active');
+  // parse frontmatter → fields
+  const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  const data = {};
+  if (m) { m[1].split(/\r?\n/).forEach(l => { const i = l.indexOf(':'); if (i > 0) data[l.slice(0, i).trim()] = l.slice(i + 1).trim(); }); }
+  document.getElementById('slug').value = data.slug || slug;
+  document.getElementById('slug').disabled = !!current;
+  document.getElementById('lang').value = data.lang || lang;
+  document.getElementById('title').value = data.title || '';
+  document.getElementById('date').value = data.date || '';
+  document.getElementById('tag').value = data.tag || '';
+  document.getElementById('desc').value = data.desc || '';
+  document.getElementById('body').value = m ? m[2].trim() : raw;
+  render();
+}
+
+function assemble() {
+  const f = (id) => document.getElementById(id).value.trim();
+  return `---\nslug: ${f('slug')}\nlang: ${f('lang')}\ntitle: ${f('title')}\ndate: ${f('date')}\ntag: ${f('tag')}\ndesc: ${f('desc')}\n---\n\n${f('body')}\n`;
+}
+
+async function save() {
+  const slug = document.getElementById('slug').value.trim();
+  const lang = document.getElementById('lang').value;
+  if (!/^[a-z0-9-]+$/i.test(slug)) { document.getElementById('msg').textContent = 'slug 只能字母数字和连字符'; return; }
+  if (!document.getElementById('title').value.trim()) { document.getElementById('msg').textContent = '标题不能空'; return; }
+  try {
+    await api('/api/article', { method: 'PUT', body: JSON.stringify({ slug, lang, content: assemble() }) });
+    current = { slug, lang };
+    document.getElementById('slug').disabled = true;
+    document.getElementById('msg').textContent = '✓ 已保存 ' + new Date().toLocaleTimeString();
+    loadList();
+  } catch (e) { document.getElementById('msg').textContent = '保存失败'; }
+}
+
+async function del() {
+  if (!current) return;
+  if (!confirm('删除这篇文章?')) return;
+  await api(`/api/article/${current.slug}/${current.lang}`, { method: 'DELETE' });
+  current = null;
+  document.getElementById('editor').classList.add('hidden');
+  document.getElementById('empty').classList.remove('hidden');
+  loadList();
+}
+
+let rt;
+async function render() {
+  clearTimeout(rt);
+  rt = setTimeout(async () => {
+    const md = document.getElementById('body').value;
+    try { const { html } = await api('/api/render', { method: 'POST', body: JSON.stringify({ md }) }); document.getElementById('preview').innerHTML = html; }
+    catch {}
+  }, 250);
+}
+
+boot();
+</script>
+</body>
+</html>

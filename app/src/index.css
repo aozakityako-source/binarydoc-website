@@ -1,0 +1,126 @@
+@import '@fontsource/open-sans/400.css';
+@import '@fontsource/open-sans/500.css';
+@import '@fontsource/open-sans/600.css';
+@import '@fontsource/open-sans/700.css';
+@import '@fontsource/open-sans/800.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 211 60% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 20%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 211 60% 59%;
+    --radius: 0px;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-white text-text-primary font-sans antialiased font-medium;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    lang: zh;
+  }
+}
+
+@layer components {
+  .container-main {
+    @apply max-w-[1200px] mx-auto px-4;
+  }
+}
+
+/* article (markdown) body typography */
+.prose-article h2 { font-size: 1.5rem; font-weight: 700; margin: 1.6em 0 0.5em; }
+.prose-article h3 { font-size: 1.2rem; font-weight: 600; margin: 1.3em 0 0.4em; }
+.prose-article p { margin: 0.9em 0; line-height: 1.75; }
+.prose-article ul { margin: 0.9em 0; padding-left: 1.5em; list-style: disc; }
+.prose-article ol { margin: 0.9em 0; padding-left: 1.5em; list-style: decimal; }
+.prose-article li { margin: 0.35em 0; }
+.prose-article blockquote {
+  border-left: 3px solid #22D3EE;
+  padding-left: 1em;
+  color: #555;
+  margin: 1.2em 0;
+}
+.prose-article strong { font-weight: 700; }
+.prose-article code { font-family: monospace; background: #f3f4f6; padding: 0.1em 0.35em; }
+
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: none; }
+}
+
+@layer utilities {
+  /* scroll / IO reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* hero load stagger — animates direct children in sequence */
+  .hero-stagger > * {
+    animation: hero-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+  .hero-stagger > *:nth-child(2) { animation-delay: 0.18s; }
+  .hero-stagger > *:nth-child(3) { animation-delay: 0.31s; }
+  .hero-stagger > *:nth-child(4) { animation-delay: 0.44s; }
+
+  /* subtle card hover lift */
+  .lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .lift:hover {
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-in,
+  .hero-stagger > *,
+  .lift,
+  .lift:hover {
+    transition: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

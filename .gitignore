@@ -1,0 +1,32 @@
+# Dependencies
+app/node_modules
+app/.pnp
+app/.pnp.js
+
+# Build outputs
+app/dist
+app/dist-ssr
+app/*.local
+
+# Admin runtime
+app/.admin-sessions.json
+
+# Logs
+app/logs
+app/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
