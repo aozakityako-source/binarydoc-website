@@ -27,18 +27,22 @@ export default function ManufacturerSection() {
                 aria-label={name}
                 className="lift group flex w-full items-center justify-center p-4 min-h-[100px] border border-border-light hover:border-brand-blue hover:bg-brand-blue/5 transition-all duration-300"
               >
-                <div className={showName ? 'flex items-center gap-2' : ''}>
+                {showName ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <img
+                      src={logo}
+                      alt={name}
+                      className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <span className="text-base font-bold text-text-primary">{name}</span>
+                  </div>
+                ) : (
                   <img
                     src={logo}
                     alt={name}
-                    className={`object-contain transition-transform duration-300 group-hover:scale-105 ${
-                      showName ? 'max-h-10 max-w-[60px]' : 'max-h-12 max-w-[110px]'
-                    }`}
+                    className="max-h-12 max-w-[110px] object-contain transition-transform duration-300 group-hover:scale-105"
                   />
-                  {showName && (
-                    <span className="text-sm font-bold text-text-primary">{name}</span>
-                  )}
-                </div>
+                )}
               </Link>
             </Reveal>
           ))}
